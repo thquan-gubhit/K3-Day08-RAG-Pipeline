@@ -33,22 +33,31 @@ def setup_directory():
     print(f"✓ Thư mục đã sẵn sàng: {DATA_DIR}")
 
 
-# TODO: Tải file PDF/DOCX về DATA_DIR
-# Có thể tải thủ công hoặc viết script download nếu có direct link.
-#
-# Ví dụ nếu có direct link:
-#
-# import requests
-#
-# def download_file(url: str, filename: str):
-#     response = requests.get(url)
-#     filepath = DATA_DIR / filename
-#     filepath.write_bytes(response.content)
-#     print(f"✓ Đã tải: {filepath}")
-#
-# Nếu trang là HTML thuần (không phải PDF sẵn), có thể convert nội dung text
-# thành PDF đơn giản bằng thư viện fpdf2 (đã có trong requirements.txt).
+import requests
+
+LEGAL_DOCUMENTS = [
+    ("https://www.rmit.edu.vn/content/dam/rmit/vn/en/assets-for-production/documents/pdfs/vn-parents-guide/en-parents-guide-2026.pdf", "parents-family-guide-2026.pdf"),
+    ("https://www.rmit.edu.vn/content/dam/rmit/vn/en/assets-for-production/documents/pdfs/study-at-rmit/programs/english-pdf/doctor-of-philosophy/scholarships-for-phd-students/rmit-university-vietnam-scholarship-terms-and-conditions.pdf", "scholarship-terms-and-conditions.pdf"),
+    ("https://www.rmit.edu.vn/assets/vn/en/assets-for-production/documents/pdfs/study-at-rmit/tuition-fees/student-fees-and-charges-guide-06-2026.pdf", "student-fees-and-charges-guide-2026.pdf"),
+]
+
+
+def download_file(url: str, filename: str):
+    filepath = DATA_DIR / filename
+    if filepath.exists() and filepath.stat().st_size > 1024:
+        print(f"- Đã có: {filepath.name}")
+        return filepath
+
+    response = requests.get(url, timeout=90)
+    response.raise_for_status()
+    if not response.content.startswith(b"%PDF-"):
+        raise ValueError(f"Nguồn không trả về PDF hợp lệ: {url}")
+    filepath.write_bytes(response.content)
+    print(f"✓ Đã tải: {filepath}")
+    return filepath
 
 
 if __name__ == "__main__":
     setup_directory()
+    for document_url, document_name in LEGAL_DOCUMENTS:
+        download_file(document_url, document_name)
