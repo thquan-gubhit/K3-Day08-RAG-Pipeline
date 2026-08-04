@@ -13,5 +13,90 @@
     "question": "Trường có cung cấp ký túc xá trong khuôn viên không?",
     "expected_answer": "Không — trường không cung cấp chỗ ở trong khuôn viên, nhưng có đội ngũ hỗ trợ sinh viên tìm chỗ ở gần trường.",
     "expected_context": "Trang Accommodation Services"
+  },
+  {
+    "question": "Làm thế nào để sinh viên đặt phòng học nhóm tại thư viện RMIT?",
+    "expected_answer": "Sinh viên có thể sử dụng hệ thống đặt phòng trực tuyến qua cổng thông tin thư viện (Library Portal) trước tối đa 14 ngày.",
+    "expected_context": "Trang Library Services, mục Group Study Rooms"
+  },
+  {
+    "question": "Học bổng Thành tích Học tập Xuất sắc (Academic Achievement Scholarship) giảm bao nhiêu % học phí?",
+    "expected_answer": "Học bổng này cung cấp các mức giảm 50% hoặc 25% học phí toàn khóa học dành cho ứng viên xuất sắc.",
+    "expected_context": "Trang Scholarships, mục Academic Achievement"
+  },
+  {
+    "question": "Học kỳ thu và đông tại RMIT thường bắt đầu vào tháng mấy?",
+    "expected_answer": "Các học kỳ chính tại RMIT thường khai giảng vào tháng 2, tháng 6 và tháng 10 hàng năm.",
+    "expected_context": "Trang Academic Calendar, mục Semester Dates"
+  },
+  {
+    "question": "Phương thức thanh toán học phí nào được chấp nhận?",
+    "expected_answer": "Chấp nhận chuyển khoản ngân hàng trực tiếp (Vietcombank, ACB), thanh toán trực tuyến bằng thẻ tín dụng/ghi nợ qua ứng dụng Flywire hoặc cổng cổng thanh toán học phí của trường.",
+    "expected_context": "Trang Student Fees and Charges Guide 2026, mục Payment Methods"
+  },
+  {
+    "question": "Chính sách hoàn học phí của RMIT được áp dụng trong thời gian nào?",
+    "expected_answer": "Sinh viên sẽ được hoàn học phí 100% cho môn học nếu làm thủ tục hủy đăng ký môn học trước ngày chốt danh sách (Census Date) của học kỳ đó.",
+    "expected_context": "Trang Student Fees and Charges Guide 2026, mục Refund Policy"
+  },
+  {
+    "question": "Census Date (Ngày chốt danh sách) là gì?",
+    "expected_answer": "Census Date là hạn chót trong mỗi học kỳ để sinh viên thêm/bớt môn học hoặc rút khỏi học kỳ mà không bị ghi nhận thâm hụt học phí hay học vụ.",
+    "expected_context": "Trang Student Fees and Charges Guide 2026, mục Census Date"
+  },
+  {
+    "question": "Sinh viên có thể đăng ký học phí trả góp không?",
+    "expected_answer": "Có, sinh viên có thể thanh toán học phí thông qua dịch vụ thẻ tín dụng hỗ trợ trả góp 0% tại các ngân hàng đối tác của RMIT Việt Nam.",
+    "expected_context": "Trang Student Fees and Charges Guide 2026, mục Installment Payment"
+  },
+  {
+    "question": "Đâu là điều kiện duy trì học bổng của trường RMIT?",
+    "expected_answer": "Sinh viên nhận học bổng cần tuân thủ quy chế học vụ, đăng ký đầy đủ môn học chính khóa và đạt Điểm Trung bình Học kỳ (GPA) theo đúng mốc quy định của từng Quỹ học bổng.",
+    "expected_context": "Trang Scholarship Terms and Conditions, mục Scholarship Maintenance"
+  },
+  {
+    "question": "Phí trễ hạn thanh toán học phí tại RMIT là bao nhiêu?",
+    "expected_answer": "Nếu thanh toán học phí sau ngày đến hạn mà không có lý do hợp lệ, sinh viên sẽ bị tính khoản phí trễ hạn, đồng thời quyền truy cập dịch vụ học vấn có thể bị đình chỉ tạm thời.",
+    "expected_context": "Trang Student Fees and Charges Guide 2026, mục Late Fee Charges"
+  },
+  {
+    "question": "Sinh viên mới trúng tuyển cần nộp những giấy tờ pháp lý gì để xác nhận nhập học?",
+    "expected_answer": "Sinh viên cần nộp bản sao chứng thực bằng tốt nghiệp THPT, bảng điểm chính thức, chứng chỉ tiếng Anh (IELTS/TOEFL) và giấy xác nhận chi trả đóng góp ban đầu.",
+    "expected_context": "Trang Parents Family Guide 2026, mục Acceptance and Enrollment"
+  },
+  {
+    "question": "Dịch vụ Hỗ trợ Sức khỏe Tâm lý (Counseling) tại RMIT có tính phí không?",
+    "expected_answer": "Toàn bộ các buổi tham gia tư vấn tâm lý cá nhân và hỗ trợ tinh thần cho sinh viên đang theo học tại trường đều được cung cấp hoàn toàn miễn phí và bảo mật.",
+    "expected_context": "Trang Student Wellbeing Services, mục Counseling Support"
+  },
+  {
+    "question": "Làm cách nào để kết nối Wi-Fi trong cơ sở của trường?",
+    "expected_answer": "Sinh viên đăng nhập vào mạng Wi-Fi 'RMIT-University' hoặc 'eduroam' bằng tên đăng nhập sXXXXXXX@rmit.edu.vn cùng mật khẩu myRMIT của mình.",
+    "expected_context": "Trang IT Services, mục Campus Wireless Network"
+  },
+  {
+    "question": "Quy định mượn laptop hỗ trợ khẩn cấp từ thư viện trường ra sao?",
+    "expected_answer": "Sinh viên được phép mượn máy tính xách tay trong ngày (tối đa 4 giờ/lượt) tại quầy dịch vụ thư viện bằng việc xuất trình Thẻ sinh viên hợp lệ.",
+    "expected_context": "Trang Library Services, mục Technology Borrowing"
+  },
+  {
+    "question": "Sinh viên quốc tế cần lưu ý thủ tục xin Visa du học tại Việt Nam ở bộ phận nào?",
+    "expected_answer": "Bộ phận Hỗ trợ Sinh viên Quốc tế (International Student Support) sẽ trực tiếp tư vấn và hỗ trợ phát hành tài liệu pháp lý cho việc đăng ký và xin visa tại Đại sứ quán.",
+    "expected_context": "Trang International Students, mục Visa Support Services"
+  },
+  {
+    "question": "Tổ chức hội phụ huynh và dịch vụ liên lạc gia đình hoạt động theo phương châm gì?",
+    "expected_answer": "Định kỳ kết nối phụ huynh để giúp gia đình theo dõi chặng đường tiến bộ học vụ của sinh viên mà vẫn tôn trọng quyền bảo mật thông tin trưởng thành của sinh viên.",
+    "expected_context": "Trang Parents Family Guide 2026, mục Family Partnership"
+  },
+  {
+    "question": "Trung tâm nghề nghiệp (Career Connect) cung cấp những hỗ trợ gì cho sinh viên năm cuối?",
+    "expected_answer": "Hỗ trợ duyệt chỉnh trang CV, tư vấn luyện phỏng vấn nghề nghiệp 1 kèm 1, và kết nối thẳng tới hệ thống hội thảo tuyển dụng với hàng ngàn đối tác doanh nghiệp.",
+    "expected_context": "Trang Career and Industry Connect, mục Student Career Counseling"
+  },
+  {
+    "question": "Học liệu và giáo trình điện tử có sẵn trên hệ thống nào?",
+    "expected_answer": "Hầu hết các tài liệu khoa học, bài báo nghiên cứu và sách giáo khoa điện tử đều được cung cấp qua Thư viện số RMIT trực tuyến phục vụ truy cập 24/7.",
+    "expected_context": "Trang Library Services, mục Digital Repository"
   }
 ]
