@@ -9,6 +9,7 @@ crawl4ai>=0.3.0
 # Task 3 - Document conversion
 markitdown[pdf]>=0.1.0
 fpdf2>=2.7.0
+pypdf>=4.0.0
 
 # Task 4 - Chunking & Indexing
 langchain-text-splitters>=0.2.0
