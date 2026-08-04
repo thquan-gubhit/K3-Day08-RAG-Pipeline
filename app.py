@@ -64,13 +64,19 @@ st.set_page_config(
 # CONSTANTS
 # =============================================================================
 
+# Bộ câu hỏi gợi ý đã được đối chiếu THỰC TẾ với corpus hiện tại
+# (student-fees-and-charges-guide, scholarship-terms-and-conditions,
+# parents-family-guide + 5 bài news): mỗi câu dưới đây đều cho câu trả lời có
+# citation hợp lệ. Không đưa vào các câu mà corpus không có bằng chứng
+# (ví dụ tiêu chí xét học bổng, đăng ký ký túc xá) — hệ thống sẽ đúng khi trả
+# "I cannot verify this information", nhưng câu gợi ý thì không nên hứa sai.
 SUGGESTED_QUESTIONS = [
     "Học phí tại RMIT Vietnam được thanh toán như thế nào?",
-    "Điều kiện để nhận học bổng thành tích học tập là gì?",
-    "Sinh viên có thể đăng ký ký túc xá bằng cách nào?",
-    "Quy trình đăng ký học phần gồm những bước nào?",
+    "Hạn chót thanh toán học phí là khi nào?",
+    "Sinh viên nộp học phí trễ hạn sẽ bị xử lý thế nào?",
+    "Sinh viên nhận học bổng phải tuân thủ những điều kiện gì?",
+    "Học bổng có thể bị chấm dứt trong trường hợp nào?",
     "Thư viện cung cấp những dịch vụ hỗ trợ nào?",
-    "Sinh viên có thể nhận hỗ trợ học tập ở đâu?",
 ]
 
 # Trạng thái pipeline → (icon, nhãn tiếng Việt). Luôn kèm text để không phụ

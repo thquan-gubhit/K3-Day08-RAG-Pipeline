@@ -536,10 +536,16 @@ def _chroma_status() -> dict:
             "label": "ChromaDB",
             "detail": "Chưa cài chromadb — Task 5 đang chạy chế độ in-memory",
         }
+    # Mở trực tiếp bằng chromadb thay vì phụ thuộc helper của Task 4 — các
+    # nhánh khác nhau của nhóm export API khác nhau (có nhánh có
+    # get_collection(), có nhánh không), nên đọc thẳng là ổn định nhất.
     try:
-        from .task4_chunking_indexing import get_collection
+        import chromadb
 
-        count = get_collection().count()
+        from .task4_chunking_indexing import CHROMA_DIR, COLLECTION_NAME
+
+        client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        count = client.get_collection(COLLECTION_NAME).count()
     except Exception as exc:
         return {"ok": False, "label": "ChromaDB", "detail": f"Không mở được ({type(exc).__name__})"}
 

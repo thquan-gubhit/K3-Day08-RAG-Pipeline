@@ -56,35 +56,69 @@ def semantic_search(query: str, top_k: int = 10) -> list[dict]:
     # return output[:top_k]
     if not query.strip() or top_k <= 0:
         return []
-    from .task4_chunking_indexing import get_collection, get_embedding_model
+
+    from .task4_chunking_indexing import (
+        CHROMA_DIR,
+        COLLECTION_NAME,
+        EMBEDDING_MODEL,
+    )
+
+    # Mở collection đã index ở Task 4. Nếu chưa chạy Task 4 (hoặc chưa cài
+    # chromadb) thì trả list rỗng để Task 9 tự chuyển sang PageIndex fallback,
+    # thay vì làm sập cả pipeline.
     try:
-        collection = get_collection()
-    except ImportError:
-        from .task4_chunking_indexing import chunk_documents, load_documents
-        import math
-        chunks = chunk_documents(load_documents())
-        if not chunks:
-            return []
-        model = get_embedding_model()
-        query_vector = model.encode(query)
-        doc_vectors = model.encode([chunk["content"] for chunk in chunks])
-        def cosine(vector):
-            return sum(a*b for a, b in zip(query_vector, vector)) / ((math.sqrt(sum(a*a for a in query_vector)) or 1) * (math.sqrt(sum(b*b for b in vector)) or 1))
-        output = [{**chunk, "score": float(cosine(vector))} for chunk, vector in zip(chunks, doc_vectors)]
-        return sorted(output, key=lambda item: item["score"], reverse=True)[:top_k]
+        import chromadb
+
+        client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        collection = client.get_collection(COLLECTION_NAME)
+    except Exception:
+        return []
+
     count = collection.count()
     if count == 0:
         return []
-    vector = get_embedding_model().encode(query).tolist()
+
+    # Query phải được embed bằng ĐÚNG model đã dùng lúc index (Task 4:
+    # text-embedding-3-small, 1536 chiều) — lệch model là lệch số chiều vector
+    # và ChromaDB sẽ báo lỗi dimension mismatch.
+    import os
+
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return []
+
+    from openai import OpenAI
+
+    try:
+        response = OpenAI(api_key=api_key).embeddings.create(
+            model=EMBEDDING_MODEL, input=[query]
+        )
+        query_vector = response.data[0].embedding
+    except Exception:
+        return []
+
     raw = collection.query(
-        query_embeddings=[vector], n_results=min(top_k, count),
+        query_embeddings=[query_vector],
+        n_results=min(top_k, count),
         include=["documents", "metadatas", "distances"],
     )
+
     output = [
-        {"content": doc, "score": max(0.0, 1.0 - float(distance)), "metadata": meta or {}}
-        for doc, meta, distance in zip(raw["documents"][0], raw["metadatas"][0], raw["distances"][0])
+        {
+            "content": doc,
+            # Collection tạo với hnsw:space=cosine → distance = 1 - cosine.
+            "score": max(0.0, 1.0 - float(distance)),
+            "metadata": meta or {},
+        }
+        for doc, meta, distance in zip(
+            raw["documents"][0], raw["metadatas"][0], raw["distances"][0]
+        )
     ]
-    return sorted(output, key=lambda item: item["score"], reverse=True)[:top_k]
+    output.sort(key=lambda item: item["score"], reverse=True)
+    return output[:top_k]
 
 
 if __name__ == "__main__":

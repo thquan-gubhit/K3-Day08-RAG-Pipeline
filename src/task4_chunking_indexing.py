@@ -40,16 +40,13 @@ CHROMA_DIR = Path(__file__).parent.parent / "chroma_db"
 # CONFIGURATION — Giải thích lựa chọn của bạn trong comment
 # =============================================================================
 
-# TODO: Chọn chunking strategy và giải thích vì sao
-CHUNK_SIZE = 800        # Lab spec: đủ ngữ cảnh nhưng vẫn retrieval chính xác.
-CHUNK_OVERLAP = 100     # Giữ liên kết câu/ý tại ranh giới chunk.
+CHUNK_SIZE = 800        # Đủ ngữ cảnh cho policy, không quá dài khi retrieval.
+CHUNK_OVERLAP = 100     # Giữ liên kết câu/ý tại ranh giới hai chunk.
 CHUNKING_METHOD = "recursive"  # "recursive" | "markdown_header" | "semantic"
 
-# TODO: Chọn embedding model và giải thích
-EMBEDDING_MODEL = "BAAI/bge-m3"  # Vì sao? Multilingual, tốt cho tiếng Việt lẫn tiếng Anh
-EMBEDDING_DIM = 1024
+EMBEDDING_MODEL = "text-embedding-3-small"  # OpenAI API, không tốn RAM cho model local.
+EMBEDDING_DIM = 1536
 
-# TODO: Chọn vector store
 VECTOR_STORE = "chromadb"  # "chromadb" | "weaviate" | "faiss"
 COLLECTION_NAME = "university_services_docs"
 
@@ -65,33 +62,16 @@ def load_documents() -> list[dict]:
     Returns:
         List of {'content': str, 'metadata': {'source': str, 'type': str}}
     """
-    # TODO: Iterate qua STANDARDIZED_DIR, đọc .md files
-    # documents = []
-    # for md_file in STANDARDIZED_DIR.rglob("*.md"):
-    #     content = md_file.read_text(encoding="utf-8")
-    #     doc_type = "legal" if "legal" in str(md_file) else "news"
-    #     documents.append({
-    #         "content": content,
-    #         "metadata": {"source": md_file.name, "type": doc_type}
-    #     })
-    # return documents
     documents = []
     for md_file in sorted(STANDARDIZED_DIR.rglob("*.md")):
         content = md_file.read_text(encoding="utf-8").strip()
         if not content:
             continue
         doc_type = "legal" if "legal" in md_file.parts else "news"
-        name = md_file.name.lower()
-        if any(word in name for word in ("seller", "merchant", "vendor")):
-            role = "seller"
-        elif any(word in name for word in ("buyer", "customer", "student", "scholarship", "fees", "family")):
-            role = "buyer"
-        else:
-            role = "both"
-        documents.append({"content": content, "metadata": {
-            "source": md_file.name, "type": doc_type, "customer_role": role,
-            "path": str(md_file.relative_to(STANDARDIZED_DIR)),
-        }})
+        documents.append({
+            "content": content,
+            "metadata": {"source": md_file.name, "type": doc_type},
+        })
     return documents
 
 
@@ -102,41 +82,27 @@ def chunk_documents(documents: list[dict]) -> list[dict]:
     Returns:
         List of {'content': str, 'metadata': dict} — mỗi item là 1 chunk
     """
-    # TODO: Implement chunking
-    #
-    # Ví dụ với RecursiveCharacterTextSplitter:
-    # from langchain_text_splitters import RecursiveCharacterTextSplitter
-    #
-    # splitter = RecursiveCharacterTextSplitter(
-    #     chunk_size=CHUNK_SIZE,
-    #     chunk_overlap=CHUNK_OVERLAP,
-    #     separators=["\n\n", "\n", ". ", " ", ""]
-    # )
-    # chunks = []
-    # for doc in documents:
-    #     splits = splitter.split_text(doc["content"])
-    #     for i, chunk_text in enumerate(splits):
-    #         chunks.append({
-    #             "content": chunk_text,
-    #             "metadata": {**doc["metadata"], "chunk_index": i}
-    #         })
-    # return chunks
     try:
         from langchain_text_splitters import RecursiveCharacterTextSplitter
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP,
+            chunk_size=CHUNK_SIZE,
+            chunk_overlap=CHUNK_OVERLAP,
             separators=["\n\n", "\n", ". ", " ", ""],
         )
         split_text = splitter.split_text
     except ImportError:
-        def split_text(text):
-            return [text[start:start + CHUNK_SIZE] for start in range(0, len(text), CHUNK_SIZE - CHUNK_OVERLAP)]
+        # Cho phép test hàm chunking ở Python system chưa cài LangChain.
+        split_text = lambda text: [
+            text[start:start + CHUNK_SIZE]
+            for start in range(0, len(text), CHUNK_SIZE - CHUNK_OVERLAP)
+        ]
     chunks = []
     for doc in documents:
-        for index, text in enumerate(split_text(doc["content"])):
-            chunks.append({"content": text, "metadata": {
-                **doc.get("metadata", {}), "chunk_index": index,
-            }})
+        for index, chunk_text in enumerate(split_text(doc["content"])):
+            chunks.append({
+                "content": chunk_text,
+                "metadata": {**doc["metadata"], "chunk_index": index},
+            })
     return chunks
 
 
@@ -147,21 +113,26 @@ def embed_chunks(chunks: list[dict]) -> list[dict]:
     Returns:
         Mỗi chunk dict được thêm key 'embedding': list[float]
     """
-    # TODO: Implement embedding
-    #
-    # Ví dụ với sentence-transformers:
-    # from sentence_transformers import SentenceTransformer
-    #
-    # model = SentenceTransformer(EMBEDDING_MODEL)
-    # texts = [c["content"] for c in chunks]
-    # embeddings = model.encode(texts, show_progress_bar=True)
-    # for chunk, emb in zip(chunks, embeddings):
-    #     chunk["embedding"] = emb.tolist()
-    # return chunks
-    model = get_embedding_model()
-    embeddings = model.encode([c["content"] for c in chunks], show_progress_bar=True)
+    import os
+    from dotenv import load_dotenv
+    from openai import OpenAI
+
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY chưa được cấu hình trong .env")
+    client = OpenAI(api_key=api_key)
+    texts = [chunk["content"] for chunk in chunks]
+    embeddings = []
+    for start in range(0, len(texts), 64):
+        response = client.embeddings.create(
+            model=EMBEDDING_MODEL,
+            input=texts[start:start + 64],
+        )
+        embeddings.extend(item.embedding for item in response.data)
+        print(f"  Embedded {min(start + 64, len(texts))}/{len(texts)} chunks")
     for chunk, embedding in zip(chunks, embeddings):
-        chunk["embedding"] = embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
+        chunk["embedding"] = embedding
     return chunks
 
 
@@ -169,82 +140,25 @@ def index_to_vectorstore(chunks: list[dict]):
     """
     Lưu chunks vào vector store đã chọn.
     """
-    # TODO: Implement indexing
-    #
-    # Ví dụ với ChromaDB:
-    # import chromadb
-    #
-    # CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-    # client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-    # collection = client.get_or_create_collection(
-    #     name=COLLECTION_NAME,
-    #     metadata={"hnsw:space": "cosine"},
-    # )
-    #
-    # ids = [f"{c['metadata']['source']}_chunk_{c['metadata']['chunk_index']}" for c in chunks]
-    # collection.upsert(
-    #     ids=ids,
-    #     documents=[c["content"] for c in chunks],
-    #     embeddings=[c["embedding"] for c in chunks],
-    #     metadatas=[c["metadata"] for c in chunks],
-    # )
+    import chromadb
+
+    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
     try:
-        collection = get_collection()
-    except ImportError:
-        # Keep a persistent, inspectable fallback index when Chroma cannot be
-        # installed (notably memory-limited Python 3.13 classroom machines).
-        import json
-        CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-        (CHROMA_DIR / "fallback_index.json").write_text(
-            json.dumps(chunks, ensure_ascii=False), encoding="utf-8"
-        )
-        return None
-    ids = [f"{c['metadata']['source']}::{c['metadata']['chunk_index']}" for c in chunks]
+        client.delete_collection(COLLECTION_NAME)
+    except Exception:
+        pass
+    collection = client.create_collection(
+        name=COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine"},
+    )
     collection.upsert(
-        ids=ids, documents=[c["content"] for c in chunks],
+        ids=[f"{c['metadata']['source']}::chunk_{c['metadata']['chunk_index']}" for c in chunks],
+        documents=[c["content"] for c in chunks],
         embeddings=[c["embedding"] for c in chunks],
         metadatas=[c["metadata"] for c in chunks],
     )
     return collection
-
-
-_EMBEDDING_MODEL = None
-
-
-def get_embedding_model():
-    """Lazy-load the shared embedding model once per process."""
-    global _EMBEDDING_MODEL
-    if _EMBEDDING_MODEL is None:
-        try:
-            from sentence_transformers import SentenceTransformer
-            _EMBEDDING_MODEL = SentenceTransformer(EMBEDDING_MODEL)
-        except ImportError:
-            import hashlib, math, re
-            class HashingEmbedding:
-                def encode(self, texts, show_progress_bar=False):
-                    single = isinstance(texts, str)
-                    values = [texts] if single else texts
-                    vectors = []
-                    for text in values:
-                        vector = [0.0] * EMBEDDING_DIM
-                        for token in re.findall(r"\w+", text.lower(), re.UNICODE):
-                            digest = hashlib.sha256(token.encode()).digest()
-                            vector[int.from_bytes(digest[:4], "big") % EMBEDDING_DIM] += 1.0
-                        norm = math.sqrt(sum(x*x for x in vector)) or 1.0
-                        vectors.append([x / norm for x in vector])
-                    return vectors[0] if single else vectors
-            _EMBEDDING_MODEL = HashingEmbedding()
-    return _EMBEDDING_MODEL
-
-
-def get_collection():
-    """Open the persistent cosine-similarity Chroma collection."""
-    import chromadb
-    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-    client = chromadb.PersistentClient(path=str(CHROMA_DIR))
-    return client.get_or_create_collection(
-        name=COLLECTION_NAME, metadata={"hnsw:space": "cosine"},
-    )
 
 
 def run_pipeline():
