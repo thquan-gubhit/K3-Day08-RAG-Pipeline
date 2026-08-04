@@ -580,6 +580,37 @@ chainlit run app.py
 
 ---
 
+### Chatbot UI (Role 4 — Frontend & Chatbot Developer)
+
+`app.py` là entrypoint duy nhất và có **hai chế độ giao diện**:
+
+1. **React custom component** (`components/university_chat_ui/`) — React 18 + TypeScript
+   + Vite + Tailwind + Motion + Three.js. Bundle production đã được commit sẵn trong
+   `frontend/dist/` nên chạy được ngay sau khi clone.
+2. **Streamlit native** — fallback bắt buộc, tự động dùng khi `dist/` chưa tồn tại
+   hoặc component không nạp được. Đầy đủ chức năng chat, source inspector,
+   pipeline trace, `top_k` và conversation memory.
+
+```bash
+# Chạy bình thường (tự chọn giao diện)
+streamlit run app.py
+
+# Build lại React component khi cần
+cd components/university_chat_ui/frontend
+npm install
+npm run build
+```
+
+Tính năng: câu trả lời có citation `[Nguồn, Năm]` được highlight, source inspector
+hiển thị đúng loại điểm (RRF raw / cosine %), pipeline trace đo thời gian thật từng
+chặng, conversation memory cho câu hỏi follow-up, và hiển thị rõ khi pipeline chuyển
+sang **PageIndex fallback**.
+
+📄 Chi tiết kiến trúc, biến môi trường, cách kiểm thử và kịch bản demo:
+**[`ROLE4_IMPLEMENTATION.md`](ROLE4_IMPLEMENTATION.md)**
+
+---
+
 ### Lưu ý
 
 Hãy giữ lại repo này nếu như bạn học track 3 giai đoạn 2, chúng ta sẽ phát triển tiếp dự án lên knowledge graph để khắc phục các câu hỏi hóc búa khi có các câu hỏi khó.

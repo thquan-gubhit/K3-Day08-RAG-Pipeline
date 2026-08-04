@@ -26,6 +26,9 @@ pageindex>=0.1.0
 openai>=1.30.0
 
 # Group project - UI
+# Streamlit 1.35+ hỗ trợ Custom Components v1 dùng cho components/university_chat_ui.
+# Frontend React của component được build riêng bằng npm (xem ROLE4_IMPLEMENTATION.md);
+# nếu chưa build, app.py tự động chạy bằng giao diện Streamlit native.
 streamlit>=1.35.0
 
 # Group project - Evaluation

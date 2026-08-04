@@ -18,6 +18,16 @@ data/_tmp_pdf/
 pageindex_doc_ids.json
 pageindex_pdfs/
 
+# Node / Vite (Streamlit custom component — Role 4)
+node_modules/
+components/university_chat_ui/frontend/node_modules/
+npm-debug.log*
+.vite/
+*.tsbuildinfo
+# LƯU Ý: KHÔNG ignore components/university_chat_ui/frontend/dist/
+# Bundle production cần được commit để `streamlit run app.py` chạy được React UI
+# ngay sau khi clone mà không cần cài Node.
+
 # IDE
 .vscode/
 .idea/
