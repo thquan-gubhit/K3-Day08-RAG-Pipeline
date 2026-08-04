@@ -1,0 +1,10 @@
+# Academic Achievement Scholarship for current students
+
+**Source:** https://www.rmit.edu.vn/study-at-rmit/scholarships/current-student-scholarships
+**Crawled:** 2026-08-04
+
+---
+
+## Current student scholarships
+
+RMIT Vietnam publishes Academic Achievement Scholarships for currently enrolled undergraduate students with outstanding academic results. For the 2026 round, the public page says that 21 scholarships are offered. Eligibility, selection, application evidence, deadlines, and continuing obligations are governed by the scholarship page and the linked Scholarship Terms and Conditions PDF. Applicants are advised to read those terms before applying and to submit all required material by the published deadline. A scholarship is competitive: meeting eligibility rules does not by itself guarantee an award. Recipients must continue to comply with enrolment and academic requirements stated in their offer and the general scholarship terms. Questions about an application or outcome should be directed to RMIT Vietnam's Scholarship Office through the contact details on the official page.

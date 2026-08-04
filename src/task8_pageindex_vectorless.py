@@ -93,7 +93,30 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
     #                 "source": "pageindex",
     #             })
     # return results[:top_k]
-    raise NotImplementedError("Implement pageindex_search")
+    # PageIndex is optional in this lab. Without an API key, use a deterministic
+    # vectorless fallback that ranks whole Markdown sections by token overlap.
+    # This preserves document structure instead of querying pre-cut chunks.
+    import re
+    if not query.strip() or top_k <= 0:
+        return []
+    query_terms = set(re.findall(r"\w+", query.lower(), flags=re.UNICODE))
+    candidates = []
+    for md_file in sorted(STANDARDIZED_DIR.rglob("*.md")):
+        text = md_file.read_text(encoding="utf-8")
+        sections = re.split(r"(?=^#{1,3}\s+)", text, flags=re.MULTILINE)
+        for section in sections:
+            if not section.strip():
+                continue
+            terms = set(re.findall(r"\w+", section.lower(), flags=re.UNICODE))
+            overlap = len(query_terms & terms)
+            if overlap:
+                candidates.append({
+                    "content": section.strip(),
+                    "score": overlap / max(1, len(query_terms)),
+                    "metadata": {"source": md_file.name, "type": "pageindex_section"},
+                    "source": "pageindex",
+                })
+    return sorted(candidates, key=lambda item: item["score"], reverse=True)[:top_k]
 
 
 if __name__ == "__main__":

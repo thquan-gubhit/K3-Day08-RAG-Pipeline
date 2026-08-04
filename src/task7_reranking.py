@@ -147,7 +147,14 @@ def rerank_rrf(
     #     results.append(item)
     #
     # return results
-    raise NotImplementedError("Implement rerank_rrf")
+    scores, items = {}, {}
+    for ranked_list in ranked_lists:
+        for rank, item in enumerate(ranked_list, 1):
+            key = item.get("id") or item["content"]
+            scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
+            items.setdefault(key, item)
+    ordered = sorted(scores, key=lambda key: scores[key], reverse=True)
+    return [{**items[key], "score": scores[key]} for key in ordered[:top_k]]
 
 
 # =============================================================================
@@ -178,8 +185,8 @@ def rerank(
         # Cần query_embedding - embed query trước
         raise NotImplementedError("Call rerank_mmr with query_embedding")
     elif method == "rrf":
-        # RRF cần nhiều ranked lists - gọi riêng
-        raise NotImplementedError("Call rerank_rrf with ranked_lists")
+        # Khi interface chỉ nhận một list, giữ ranking hiện tại qua RRF.
+        return rerank_rrf([candidates], top_k=top_k)
     else:
         raise ValueError(f"Unknown rerank method: {method}")
 
