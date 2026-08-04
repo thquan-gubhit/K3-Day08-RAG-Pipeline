@@ -5,4 +5,4 @@ Thành viên nhóm
 | 2 | Nguyễn Quang Hưng | 2A202601523 | |
 | 3 | Lê Minh Khiêm | 2A202601645 | |
 | 4 | Đàm Minh Tuấn | 2A202601169 | |
-| 5 | Đinh Huy Mạnh | 2A202601677 | Data & Dense Search Dev — Task 1–3, Task 4 (ChromaDB), Task 5 (Semantic Search & HyDE) |
+| 5 | Đinh Huy Mạnh | 2A202601677 | Role 2 — Task 1, Task 4, Task 7, Task 9, nối Task 10 vào app.py; trình bày Dense Search, HyDE, ChromaDB |

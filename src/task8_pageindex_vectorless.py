@@ -23,8 +23,6 @@ có field "deprecation" cảnh báo) và trả kết quả trong "retrieved_node
 """
 
 import os
-import json
-import time
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -32,8 +30,6 @@ load_dotenv()
 
 PAGEINDEX_API_KEY = os.getenv("PAGEINDEX_API_KEY", "")
 STANDARDIZED_DIR = Path(__file__).parent.parent / "data" / "standardized"
-LEGAL_DIR = Path(__file__).parent.parent / "data" / "landing" / "legal"
-DOC_IDS_FILE = Path(__file__).parent.parent / "pageindex_doc_ids.json"
 
 
 def upload_documents():
@@ -54,57 +50,7 @@ def upload_documents():
     #     resp = client.submit_document(str(pdf_path))
     #     doc_id = resp.get("doc_id") or resp.get("id")
     #     print(f"  ✓ Uploaded: {md_file.name} -> {doc_id}")
-    if not PAGEINDEX_API_KEY:
-        raise RuntimeError("PAGEINDEX_API_KEY is not configured in .env")
-
-    from pageindex import PageIndexClient
-    client = PageIndexClient(api_key=PAGEINDEX_API_KEY)
-    saved = {}
-    if DOC_IDS_FILE.exists():
-        saved = json.loads(DOC_IDS_FILE.read_text(encoding="utf-8"))
-
-    pdf_files = sorted(LEGAL_DIR.glob("*.pdf"))
-    if not pdf_files:
-        raise FileNotFoundError(f"No PDF documents found in {LEGAL_DIR}")
-
-    for pdf_file in pdf_files:
-        if pdf_file.name in saved:
-            print(f"  - Already uploaded: {pdf_file.name} -> {saved[pdf_file.name]}")
-            continue
-        response = client.submit_document(str(pdf_file))
-        doc_id = response.get("doc_id") or response.get("id")
-        if not doc_id:
-            raise RuntimeError(f"PageIndex did not return doc_id for {pdf_file.name}: {response}")
-        saved[pdf_file.name] = doc_id
-        DOC_IDS_FILE.write_text(json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"  ✓ Uploaded: {pdf_file.name} -> {doc_id}")
-
-    return saved
-
-
-def _parse_retrieval(response: dict, doc_name: str) -> list[dict]:
-    """Normalize the PageIndex 0.2.x retrieval response."""
-    results = []
-    nodes = response.get("retrieved_nodes") or response.get("results") or []
-    for node in nodes:
-        groups = node.get("relevant_contents") or []
-        if groups and isinstance(groups[0], dict):
-            groups = [groups]
-        for group in groups:
-            for item in group:
-                content = item.get("relevant_content") or item.get("content") or ""
-                if content:
-                    results.append({
-                        "content": content,
-                        "score": 1.0 / (len(results) + 1),
-                        "metadata": {
-                            "source": doc_name,
-                            "section": item.get("section_title", ""),
-                            "type": "pageindex",
-                        },
-                        "source": "pageindex",
-                    })
-    return results
+    raise NotImplementedError("Implement upload_documents")
 
 
 def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
@@ -147,55 +93,7 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
     #                 "source": "pageindex",
     #             })
     # return results[:top_k]
-    if PAGEINDEX_API_KEY and DOC_IDS_FILE.exists():
-        from pageindex import PageIndexClient
-        client = PageIndexClient(api_key=PAGEINDEX_API_KEY)
-        doc_ids = json.loads(DOC_IDS_FILE.read_text(encoding="utf-8"))
-        results = []
-        for doc_name, doc_id in doc_ids.items():
-            if not client.is_retrieval_ready(doc_id):
-                continue
-            submitted = client.submit_query(doc_id=doc_id, query=query)
-            retrieval_id = submitted.get("retrieval_id") or submitted.get("id")
-            if not retrieval_id:
-                continue
-            for _ in range(30):
-                response = client.get_retrieval(retrieval_id)
-                parsed = _parse_retrieval(response, doc_name)
-                if parsed:
-                    results.extend(parsed)
-                    break
-                status = str(response.get("status", "")).lower()
-                if status in {"failed", "error", "cancelled"}:
-                    break
-                time.sleep(2)
-        if results:
-            return results[:top_k]
-
-    # PageIndex is optional in this lab. Without uploaded/ready documents, use a deterministic
-    # vectorless fallback that ranks whole Markdown sections by token overlap.
-    # This preserves document structure instead of querying pre-cut chunks.
-    import re
-    if not query.strip() or top_k <= 0:
-        return []
-    query_terms = set(re.findall(r"\w+", query.lower(), flags=re.UNICODE))
-    candidates = []
-    for md_file in sorted(STANDARDIZED_DIR.rglob("*.md")):
-        text = md_file.read_text(encoding="utf-8")
-        sections = re.split(r"(?=^#{1,3}\s+)", text, flags=re.MULTILINE)
-        for section in sections:
-            if not section.strip():
-                continue
-            terms = set(re.findall(r"\w+", section.lower(), flags=re.UNICODE))
-            overlap = len(query_terms & terms)
-            if overlap:
-                candidates.append({
-                    "content": section.strip(),
-                    "score": overlap / max(1, len(query_terms)),
-                    "metadata": {"source": md_file.name, "type": "pageindex_section"},
-                    "source": "pageindex",
-                })
-    return sorted(candidates, key=lambda item: item["score"], reverse=True)[:top_k]
+    raise NotImplementedError("Implement pageindex_search")
 
 
 if __name__ == "__main__":

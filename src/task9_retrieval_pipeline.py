@@ -27,7 +27,7 @@ Logic:
 
 from .task5_semantic_search import semantic_search
 from .task6_lexical_search import lexical_search
-from .task7_reranking import rerank, rerank_rrf
+from .task7_reranking import rerank_rrf
 from .task8_pageindex_vectorless import pageindex_search
 
 
@@ -110,14 +110,17 @@ def retrieve(
     merged = rerank_rrf([dense_results, sparse_results], top_k=top_k * 2)
     for item in merged:
         item["source"] = "hybrid"
-    final_results = rerank(query, merged, top_k=top_k, method=RERANK_METHOD) if use_reranking else merged[:top_k]
-    for item in final_results:
-        item["source"] = "hybrid"
+    final_results = merged[:top_k]
     best_cosine = dense_results[0]["score"] if dense_results else 0.0
     if best_cosine < score_threshold:
-        fallback = pageindex_search(query, top_k=top_k)
-        if fallback:
-            return fallback[:top_k]
+        try:
+            fallback = pageindex_search(query, top_k=top_k)
+            if fallback:
+                return fallback[:top_k]
+        except (NotImplementedError, ImportError):
+            # Task 8 thuộc thành viên khác; hybrid vẫn hoạt động khi
+            # PageIndex chưa được merge vào nhánh chung.
+            pass
     return final_results[:top_k]
 
 
