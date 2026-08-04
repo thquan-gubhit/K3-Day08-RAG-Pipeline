@@ -24,7 +24,25 @@ thay vì cố vượt qua, và chỉ dùng nguồn công khai/được phép chi
 
 from pathlib import Path
 
+import requests
+
 DATA_DIR = Path(__file__).parent.parent / "data" / "landing" / "legal"
+
+
+LEGAL_DOCUMENTS = [
+    {
+        "url": "https://www.rmit.edu.vn/content/dam/rmit/vn/en/assets-for-production/documents/pdfs/vn-parents-guide/en-parents-guide-2026.pdf",
+        "filename": "parents-family-guide-2026.pdf",
+    },
+    {
+        "url": "https://www.rmit.edu.vn/content/dam/rmit/vn/en/assets-for-production/documents/pdfs/study-at-rmit/programs/english-pdf/doctor-of-philosophy/scholarships-for-phd-students/rmit-university-vietnam-scholarship-terms-and-conditions.pdf",
+        "filename": "scholarship-terms-and-conditions.pdf",
+    },
+    {
+        "url": "https://www.rmit.edu.vn/assets/vn/en/assets-for-production/documents/pdfs/study-at-rmit/tuition-fees/student-fees-and-charges-guide-06-2026.pdf",
+        "filename": "student-fees-and-charges-guide-2026.pdf",
+    },
+]
 
 
 def setup_directory():
@@ -33,22 +51,38 @@ def setup_directory():
     print(f"✓ Thư mục đã sẵn sàng: {DATA_DIR}")
 
 
-# TODO: Tải file PDF/DOCX về DATA_DIR
-# Có thể tải thủ công hoặc viết script download nếu có direct link.
-#
-# Ví dụ nếu có direct link:
-#
-# import requests
-#
-# def download_file(url: str, filename: str):
-#     response = requests.get(url)
-#     filepath = DATA_DIR / filename
-#     filepath.write_bytes(response.content)
-#     print(f"✓ Đã tải: {filepath}")
-#
-# Nếu trang là HTML thuần (không phải PDF sẵn), có thể convert nội dung text
-# thành PDF đơn giản bằng thư viện fpdf2 (đã có trong requirements.txt).
+def download_file(url: str, filename: str, overwrite: bool = False) -> Path:
+    """Download one public PDF and reject HTML/error responses."""
+    setup_directory()
+    filepath = DATA_DIR / filename
+    if filepath.exists() and filepath.stat().st_size > 1024 and not overwrite:
+        print(f"- Đã có: {filepath.name}")
+        return filepath
+
+    response = requests.get(url, timeout=90, stream=True)
+    response.raise_for_status()
+    content = response.content
+    if not content.startswith(b"%PDF-"):
+        raise ValueError(f"Nguồn không trả về PDF hợp lệ: {url}")
+    filepath.write_bytes(content)
+    print(f"✓ Đã tải: {filepath.name} ({len(content):,} bytes)")
+    return filepath
+
+
+def collect_legal_documents(overwrite: bool = False) -> list[Path]:
+    """Collect and validate all configured legal/policy documents."""
+    files = [
+        download_file(item["url"], item["filename"], overwrite=overwrite)
+        for item in LEGAL_DOCUMENTS
+    ]
+    if len(files) < 3:
+        raise RuntimeError("Task 1 yêu cầu tối thiểu 3 tài liệu")
+    return files
 
 
 if __name__ == "__main__":
-    setup_directory()
+    print("=" * 50)
+    print("Task 1: Collect legal/policy PDF documents")
+    print("=" * 50)
+    collected = collect_legal_documents()
+    print(f"\n✓ Hoàn thành: {len(collected)} tài liệu trong {DATA_DIR}")
