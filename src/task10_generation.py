@@ -39,6 +39,7 @@ TEMPERATURE = 0.3
 
 # TODO: Chọn LLM model (OpenRouter model ID)
 LLM_MODEL = "openai/gpt-4o-mini"  # hoặc model ":free" nếu chưa có credit
+OPENAI_MODEL = "gpt-4o-mini"
 
 
 # =============================================================================
@@ -194,7 +195,9 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
     if not chunks:
         return {"answer": "Tôi không thể xác minh thông tin này từ nguồn hiện có.", "sources": [], "retrieval_source": "none"}
 
-    api_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    api_key = openrouter_key or openai_key
     if not api_key:
         # Safe offline behavior: expose evidence but never synthesize an
         # uncited claim when no generation service is configured.
@@ -202,14 +205,29 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
         answer = f"Chưa có API key để tổng hợp câu trả lời. Evidence liên quan nhất đã được tìm thấy [{source}]."
     else:
         from openai import OpenAI
-        client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
-        response = client.chat.completions.create(
-            model=LLM_MODEL,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}, {
-                "role": "user", "content": f"Context:\n{context}\n\n---\n\nQuestion: {query}",
-            }], temperature=TEMPERATURE, top_p=TOP_P,
-        )
-        answer = response.choices[0].message.content
+        if openrouter_key:
+            client = OpenAI(api_key=openrouter_key, base_url="https://openrouter.ai/api/v1")
+            model = LLM_MODEL
+        else:
+            client = OpenAI(api_key=openai_key)
+            model = OPENAI_MODEL
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}, {
+                    "role": "user", "content": f"Context:\n{context}\n\n---\n\nQuestion: {query}",
+                }], temperature=TEMPERATURE, top_p=TOP_P,
+            )
+            answer = response.choices[0].message.content
+        except Exception as exc:
+            # Retrieval evidence remains useful even when the external LLM is
+            # temporarily unavailable. Return a stable response so the UI and
+            # evaluation pipeline do not crash because of a network/API error.
+            error_name = type(exc).__name__
+            answer = (
+                "Không thể kết nối dịch vụ sinh câu trả lời lúc này "
+                f"({error_name}). Các nguồn liên quan vẫn được hiển thị bên dưới."
+            )
     return {"answer": answer, "sources": chunks,
             "retrieval_source": chunks[0].get("source", "hybrid")}
 
