@@ -85,7 +85,9 @@ def reorder_for_llm(chunks: list[dict]) -> list[dict]:
     # front = chunks[::2]   # index 0, 2, 4 -> đặt ở đầu
     # back = chunks[1::2]   # index 1, 3    -> đặt ở cuối (reversed)
     # return front + back[::-1]
-    raise NotImplementedError("Implement reorder_for_llm")
+    if len(chunks) <= 2:
+        return list(chunks)
+    return list(chunks[::2]) + list(chunks[1::2])[::-1]
 
 
 # =============================================================================
@@ -114,7 +116,13 @@ def format_context(chunks: list[dict]) -> str:
     #         f"{chunk['content']}\n"
     #     )
     # return "\n---\n".join(context_parts)
-    raise NotImplementedError("Implement format_context")
+    parts = []
+    for i, chunk in enumerate(chunks, 1):
+        metadata = chunk.get("metadata", {})
+        source = metadata.get("source", f"Source {i}")
+        doc_type = metadata.get("type", "unknown")
+        parts.append(f"[Document {i} | Source: {source} | Type: {doc_type}]\n{chunk.get('content', '')}")
+    return "\n\n---\n\n".join(parts)
 
 
 # =============================================================================
@@ -180,7 +188,30 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
     #     "sources": chunks,
     #     "retrieval_source": chunks[0].get("source", "hybrid") if chunks else "none"
     # }
-    raise NotImplementedError("Implement generate_with_citation")
+    chunks = retrieve(query, top_k=top_k)
+    reordered = reorder_for_llm(chunks)
+    context = format_context(reordered)
+    if not chunks:
+        return {"answer": "Tôi không thể xác minh thông tin này từ nguồn hiện có.", "sources": [], "retrieval_source": "none"}
+
+    api_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        # Safe offline behavior: expose evidence but never synthesize an
+        # uncited claim when no generation service is configured.
+        source = chunks[0].get("metadata", {}).get("source", "nguồn hiện có")
+        answer = f"Chưa có API key để tổng hợp câu trả lời. Evidence liên quan nhất đã được tìm thấy [{source}]."
+    else:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+        response = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}, {
+                "role": "user", "content": f"Context:\n{context}\n\n---\n\nQuestion: {query}",
+            }], temperature=TEMPERATURE, top_p=TOP_P,
+        )
+        answer = response.choices[0].message.content
+    return {"answer": answer, "sources": chunks,
+            "retrieval_source": chunks[0].get("source", "hybrid")}
 
 
 if __name__ == "__main__":

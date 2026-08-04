@@ -1,0 +1,10 @@
+# RMIT Vietnam tuition fees 2026
+
+**Source:** https://www.rmit.edu.vn/study-at-rmit/tuition-fees
+**Crawled:** 2026-08-04
+
+---
+
+## Tuition fees
+
+RMIT Vietnam states that tuition is invoiced in Vietnamese dong by semester and is paid course by course. The published 2026 figures are indicative and depend on enrolment. Online payment through myRMIT is the preferred method because confirmation and processing are faster. RMIT Vietnam normally has three semesters per year and a student enrols in a maximum of three courses per semester. The page also lists compulsory non-academic fees, including medical insurance for international students and national medical insurance for Vietnamese students. Foreign-currency payments are converted to VND using the applicable transaction-date exchange rate; conversion costs and bank charges are borne by the student. Students should consult the current Student Fees and Charges Guide for binding details and contact RMIT enquiries when unsure.
