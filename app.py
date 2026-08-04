@@ -19,6 +19,40 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.task10_generation import generate_with_citation
+
+
+def normalize_sources(sources):
+    """Normalize raw chunks/source cards returned by Task 10 for Streamlit."""
+    normalized = []
+    for index, source in enumerate(sources or [], 1):
+        if not isinstance(source, dict):
+            continue
+
+        metadata = dict(source.get("metadata") or {})
+        metadata.setdefault(
+            "source",
+            source.get("source_name")
+            or source.get("name")
+            or source.get("source")
+            or "Unknown",
+        )
+        metadata.setdefault(
+            "type",
+            source.get("document_type") or source.get("type") or "unknown",
+        )
+        if source.get("url") and not metadata.get("url"):
+            metadata["url"] = source["url"]
+
+        normalized.append({
+            **source,
+            "rank": source.get("rank", index),
+            "content": source.get("content", source.get("text", "")),
+            "score": source.get("score", 0) or 0,
+            "metadata": metadata,
+        })
+    return normalized
+
 # =============================================================================
 # PAGE CONFIG
 # =============================================================================
@@ -111,10 +145,9 @@ if query:
     with st.chat_message("assistant"):
         with st.spinner("Đang tìm kiếm tài liệu và tổng hợp câu trả lời..."):
             try:
-                from src.task10_generation import generate_with_citation
                 response = generate_with_citation(query, top_k=top_k)
                 answer = response.get("answer", "Chưa thể trả lời.")
-                sources = response.get("sources", [])
+                sources = normalize_sources(response.get("sources", []))
 
             except NotImplementedError:
                 answer = "⚠️ **Task 10 chưa được implement.** Hãy hoàn thành `src/task10_generation.py` để kết nối pipeline vào UI!"
