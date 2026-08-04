@@ -33,8 +33,6 @@ def setup_directory():
     print(f"✓ Thư mục đã sẵn sàng: {DATA_DIR}")
 
 
-# TODO: Tải file PDF/DOCX về DATA_DIR
-# Có thể tải thủ công hoặc viết script download nếu có direct link.
 import requests
 
 LEGAL_DOCUMENTS = [
@@ -57,10 +55,6 @@ def download_file(url: str, filename: str):
     filepath.write_bytes(response.content)
     print(f"✓ Đã tải: {filepath}")
     return filepath
-
-
-# Nếu trang là HTML thuần (không phải PDF sẵn), có thể convert nội dung text
-# thành PDF đơn giản bằng thư viện fpdf2 (đã có trong requirements.txt).
 
 
 if __name__ == "__main__":
