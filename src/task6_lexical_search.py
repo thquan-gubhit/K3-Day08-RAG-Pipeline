@@ -19,7 +19,6 @@ from pathlib import Path
 
 # TODO: Load corpus từ data/standardized/ hoặc từ vector store
 CORPUS: list[dict] = []  # List of {'content': str, 'metadata': dict}
-_BM25 = None
 
 
 def build_bm25_index(corpus: list[dict]):
@@ -37,8 +36,7 @@ def build_bm25_index(corpus: list[dict]):
     # tokenized_corpus = [doc["content"].lower().split() for doc in corpus]
     # bm25 = BM25Okapi(tokenized_corpus)
     # return bm25
-    from rank_bm25 import BM25Okapi
-    return BM25Okapi([doc["content"].lower().split() for doc in corpus])
+    raise NotImplementedError("Implement build_bm25_index")
 
 
 def lexical_search(query: str, top_k: int = 10) -> list[dict]:
@@ -75,18 +73,7 @@ def lexical_search(query: str, top_k: int = 10) -> list[dict]:
     #             "metadata": CORPUS[idx]["metadata"]
     #         })
     # return results
-    global CORPUS, _BM25
-    if not query.strip() or top_k <= 0:
-        return []
-    if not CORPUS:
-        from .task4_chunking_indexing import chunk_documents, load_documents
-        CORPUS = chunk_documents(load_documents())
-        _BM25 = build_bm25_index(CORPUS) if CORPUS else None
-    if _BM25 is None:
-        return []
-    scores = _BM25.get_scores(query.lower().split())
-    ranked = sorted(range(len(CORPUS)), key=lambda i: float(scores[i]), reverse=True)
-    return [{**CORPUS[i], "score": float(scores[i])} for i in ranked[:top_k] if scores[i] > 0]
+    raise NotImplementedError("Implement lexical_search")
 
 
 if __name__ == "__main__":

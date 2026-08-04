@@ -39,7 +39,6 @@ TEMPERATURE = 0.3
 
 # TODO: Chọn LLM model (OpenRouter model ID)
 LLM_MODEL = "openai/gpt-4o-mini"  # hoặc model ":free" nếu chưa có credit
-OPENAI_MODEL = "gpt-4o-mini"
 
 
 # =============================================================================
@@ -86,9 +85,7 @@ def reorder_for_llm(chunks: list[dict]) -> list[dict]:
     # front = chunks[::2]   # index 0, 2, 4 -> đặt ở đầu
     # back = chunks[1::2]   # index 1, 3    -> đặt ở cuối (reversed)
     # return front + back[::-1]
-    if len(chunks) <= 2:
-        return list(chunks)
-    return list(chunks[::2]) + list(chunks[1::2])[::-1]
+    raise NotImplementedError("Implement reorder_for_llm")
 
 
 # =============================================================================
@@ -117,13 +114,7 @@ def format_context(chunks: list[dict]) -> str:
     #         f"{chunk['content']}\n"
     #     )
     # return "\n---\n".join(context_parts)
-    parts = []
-    for i, chunk in enumerate(chunks, 1):
-        metadata = chunk.get("metadata", {})
-        source = metadata.get("source", f"Source {i}")
-        doc_type = metadata.get("type", "unknown")
-        parts.append(f"[Document {i} | Source: {source} | Type: {doc_type}]\n{chunk.get('content', '')}")
-    return "\n\n---\n\n".join(parts)
+    raise NotImplementedError("Implement format_context")
 
 
 # =============================================================================
@@ -189,47 +180,7 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
     #     "sources": chunks,
     #     "retrieval_source": chunks[0].get("source", "hybrid") if chunks else "none"
     # }
-    chunks = retrieve(query, top_k=top_k)
-    reordered = reorder_for_llm(chunks)
-    context = format_context(reordered)
-    if not chunks:
-        return {"answer": "Tôi không thể xác minh thông tin này từ nguồn hiện có.", "sources": [], "retrieval_source": "none"}
-
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    openai_key = os.getenv("OPENAI_API_KEY")
-    api_key = openrouter_key or openai_key
-    if not api_key:
-        # Safe offline behavior: expose evidence but never synthesize an
-        # uncited claim when no generation service is configured.
-        source = chunks[0].get("metadata", {}).get("source", "nguồn hiện có")
-        answer = f"Chưa có API key để tổng hợp câu trả lời. Evidence liên quan nhất đã được tìm thấy [{source}]."
-    else:
-        from openai import OpenAI
-        if openrouter_key:
-            client = OpenAI(api_key=openrouter_key, base_url="https://openrouter.ai/api/v1")
-            model = LLM_MODEL
-        else:
-            client = OpenAI(api_key=openai_key)
-            model = OPENAI_MODEL
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": SYSTEM_PROMPT}, {
-                    "role": "user", "content": f"Context:\n{context}\n\n---\n\nQuestion: {query}",
-                }], temperature=TEMPERATURE, top_p=TOP_P,
-            )
-            answer = response.choices[0].message.content
-        except Exception as exc:
-            # Retrieval evidence remains useful even when the external LLM is
-            # temporarily unavailable. Return a stable response so the UI and
-            # evaluation pipeline do not crash because of a network/API error.
-            error_name = type(exc).__name__
-            answer = (
-                "Không thể kết nối dịch vụ sinh câu trả lời lúc này "
-                f"({error_name}). Các nguồn liên quan vẫn được hiển thị bên dưới."
-            )
-    return {"answer": answer, "sources": chunks,
-            "retrieval_source": chunks[0].get("source", "hybrid")}
+    raise NotImplementedError("Implement generate_with_citation")
 
 
 if __name__ == "__main__":

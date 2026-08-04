@@ -19,10 +19,7 @@ Hướng dẫn:
 import json
 from pathlib import Path
 
-try:
-    from markitdown import MarkItDown
-except ImportError:  # Lightweight fallback for constrained classroom machines.
-    MarkItDown = None
+from markitdown import MarkItDown
 
 LANDING_DIR = Path(__file__).parent.parent / "data" / "landing"
 OUTPUT_DIR = Path(__file__).parent.parent / "data" / "standardized"
@@ -34,7 +31,7 @@ def convert_legal_docs():
     output_dir = OUTPUT_DIR / "legal"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    md = MarkItDown() if MarkItDown else None
+    md = MarkItDown()
 
     for filepath in legal_dir.iterdir():
         if filepath.suffix.lower() in (".pdf", ".docx", ".doc"):
@@ -44,17 +41,7 @@ def convert_legal_docs():
             # output_path = output_dir / f"{filepath.stem}.md"
             # output_path.write_text(result.text_content, encoding="utf-8")
             # print(f"  ✓ Saved: {output_path}")
-            if md:
-                text = md.convert(str(filepath)).text_content
-            elif filepath.suffix.lower() == ".pdf":
-                from pypdf import PdfReader
-                text = "\n\n".join(page.extract_text() or "" for page in PdfReader(filepath).pages)
-            else:
-                raise RuntimeError("DOC/DOCX conversion requires markitdown")
-            output_path = output_dir / f"{filepath.stem}.md"
-            header = f"# {filepath.stem.replace('-', ' ').title()}\n\n**Source file:** {filepath.name}\n\n---\n\n"
-            output_path.write_text(header + text, encoding="utf-8")
-            print(f"  ✓ Saved: {output_path}")
+            raise NotImplementedError("Implement convert_legal_docs")
 
 
 def convert_news_articles():
@@ -78,13 +65,7 @@ def convert_news_articles():
             # content = header + data.get("content_markdown", "")
             # output_path.write_text(content, encoding="utf-8")
             # print(f"  ✓ Saved: {output_path}")
-            data = json.loads(filepath.read_text(encoding="utf-8"))
-            output_path = output_dir / f"{filepath.stem}.md"
-            header = f"# {data.get('title', 'Unknown')}\n\n"
-            header += f"**Source:** {data.get('url', 'N/A')}\n"
-            header += f"**Crawled:** {data.get('date_crawled', 'N/A')}\n\n---\n\n"
-            output_path.write_text(header + data.get("content_markdown", ""), encoding="utf-8")
-            print(f"  ✓ Saved: {output_path}")
+            raise NotImplementedError("Implement convert_news_articles")
 
 
 def convert_all():
